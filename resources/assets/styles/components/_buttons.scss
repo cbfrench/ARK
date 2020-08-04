@@ -1,0 +1,12 @@
+.success-button{
+    a{
+        background: $site-color;
+        color: white;
+        transition: all 0.2s;
+        padding: 0.5rem 1rem;
+        &:hover{
+            background: $accent-color;
+            text-decoration: none;
+        }
+    }
+}

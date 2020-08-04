@@ -1,0 +1,26 @@
+.banner .nav li {
+  @extend .nav-item;
+}
+
+.banner .nav a {
+  @extend .nav-link;
+}
+
+.banner{
+  background: $site-color;
+  padding: 2rem 0;
+  .site-logo{
+    img{
+      width: 15rem;
+      transition: all 0.2s;
+    }
+    &:hover{
+      img{
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+.page-header{
+  margin: 2rem 0;
+}

@@ -1,0 +1,54 @@
+/** Import Bootstrap functions */
+@import "~bootstrap/scss/functions";
+
+$theme-colors: (
+  primary: #525ddc
+);
+
+/** Bootstrap navbar fix (https://git.io/fADqW) */
+$navbar-dark-toggler-icon-bg: none;
+$navbar-light-toggler-icon-bg: none;
+
+$site-color: #8C1515;
+$accent-color: #E6BE67;
+$accept-color: #ADD8E6;
+
+@mixin layer($__index){
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: $__index;
+}
+
+@mixin bp($__size){
+  @media only screen and (max-width: $__size){
+    @content;
+  }
+}
+
+@mixin bp_min($__size){
+  @media only screen and (min-width: $__size){
+    @content;
+  }
+}
+
+@function __gray($percent){
+  @return rgba(0, 0, 0, $percent);
+}
+
+@mixin color_column($color, $font-color: false){
+  &__heading{
+    background: darken($color, 5%);
+    @if($font-color){
+      color: white;
+    }
+  }
+  &__total{
+    background: $color;
+    @if($font-color){
+      color: white;
+    }
+  }
+}

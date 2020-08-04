@@ -1,0 +1,23 @@
+footer{
+    .small-footer{
+        background: $site-color;
+        padding: 1rem 0;
+        & > .container{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        p{
+            color: white;
+            margin: 0;
+            a{
+                color: white;
+                transition: all 0.2s;
+                &:hover{
+                    color: $accent-color;
+                    text-decoration: none;
+                }
+            }
+        }
+    }
+}

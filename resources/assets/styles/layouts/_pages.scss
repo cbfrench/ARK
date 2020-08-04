@@ -1,0 +1,212 @@
+.template-front-page{
+    h1{
+        margin-bottom: 2rem 0;
+        text-align: center;
+    }
+    .student-error{
+        @include layer(10);
+        position: fixed;
+        background: rgba($site-color, 0.75);
+        backdrop-filter: blur(3px);
+        & > .container{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            @include layer(10);
+        }
+        &__box{
+            background: #f3f3f3;
+            padding: 3rem 5rem;
+            position: relative;
+            box-shadow: 0 0 10px __gray(0.5);
+            border: 1px solid __gray(0.5);
+            &__message{
+                margin-bottom: 0;
+            }
+            &__close{
+                position: absolute;
+                top: 0.25rem;
+                right: 0.5rem;
+                font-size: 1.5rem;
+                transform: rotateZ(45deg);
+                cursor: pointer;
+                transition: all 0.2s;
+                &:hover{
+                    color: $accent-color;
+                }
+            }
+        }
+    }
+}
+.template-submitted-page{
+    .links{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+}
+.template-check-page{
+    .check-image{
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-direction: column;
+        min-height: 20rem;
+        padding: 2rem 0;
+        &__name{
+            color: white;
+            font-size: 3rem;
+            text-shadow: 0px 0px 10px black;
+        }
+        &__temperature{
+            color: white;
+            font-size: 3rem;
+            text-shadow: 0px 0px 5px green, 0px 0px 10px green;
+        }
+        &__date{
+            color: white;
+            font-size: 3rem;
+            text-shadow: 0px 0px 10px black;
+        }
+        &__animal{
+            @include layer(-1);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    }
+    @include bp_min(1200px){
+        .check-image{
+            min-height: 40rem;
+        }
+    }
+    @include bp(768px){
+        .check-image{
+            &__name, &__date{
+                font-size: 2rem;
+            }
+        }
+    }
+}
+.template-rejected-page{
+    .rejected-image{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: url('/wp-content/uploads/2020/07/corona-reject.jpeg'){
+            position: center;
+            repeat: no-repeat;
+            size: cover;
+        }
+        min-height: 20rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        h1{
+            color: white;
+            font-size: 3rem;
+            text-shadow: 0px 0px 5px red, 0px 0px 10px red;
+        }
+        @include bp_min(1200px){
+            min-height: 35em;
+        }
+    }
+}
+.template-status-page{
+    .status-information{
+        & > .container{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 1rem;
+        }
+        .stats-section{
+            grid-column: span 2;
+            .general-stats{
+                tr{
+                    background: none !important;
+                    td{
+                        min-width: 5rem;
+                        padding: 0.5rem;
+                        font : {
+                            size: 2rem;
+                        }
+                    }
+                    th{
+                        padding: 0.5rem;
+                    }
+                    .healthy{
+                        @include color_column(green, true);
+                    }
+                    .sick{
+                        @include color_column(red, true);
+                    }
+                    .missing{
+                        @include color_column(__gray(0.05));
+                    }
+                    .students{
+                        @include color_column($accent-color);
+                    }
+                }
+            }
+        }
+        .verification{
+            grid-column: span 2;
+            img{
+                max-width: 100%;
+                max-height: 20rem;
+            }
+        }
+        .information{
+            grid-column: span 4;
+            .student-info{
+                width: 100%;
+                max-width: 100%;
+                tr{
+                    td, th{
+                        padding: 0.5rem;
+                        min-width: 2.5rem;
+                    }
+                    &:nth-child(even){
+                        background: __gray(0.05);
+                    }
+                }
+                .stay-home{
+                    background: red;
+                    color: white;
+                    &:nth-child(even){
+                        background: darken(red, 5%);
+                    }
+                }
+                .good-to-go{
+                    background: green;
+                    color: white;
+                    &:nth-child(even){
+                        background: darken(green, 5%);
+                    }
+                }
+            }
+        }
+    }
+    @include bp(768px){
+        .status-information{
+            & > .container{
+                grid-template-columns: 1fr;
+            }
+            .stats-section, .verification, .information{
+                grid-column: span 1;
+            }
+            .information{
+                .student-info{
+                    tr{
+                        td, th{
+                            min-width: unset;
+                            font-size: 0.6rem;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
