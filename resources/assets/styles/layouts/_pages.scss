@@ -77,6 +77,9 @@
             background-repeat: no-repeat;
             background-position: center;
         }
+        &:nth-child(n + 2){
+            margin-top: 2rem;
+        }
     }
     @include bp_min(1200px){
         .check-image{

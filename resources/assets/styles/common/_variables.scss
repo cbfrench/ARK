@@ -38,6 +38,13 @@ $accept-color: #ADD8E6;
   @return rgba(0, 0, 0, $percent);
 }
 
+@mixin __flex(){
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
 @mixin color_column($color, $font-color: false){
   &__heading{
     background: darken($color, 5%);

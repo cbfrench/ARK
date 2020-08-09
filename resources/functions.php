@@ -122,9 +122,7 @@ if(function_exists('acf_add_options_page')){
     ));
 }
 
-if($_REQUEST['health_reporting']){
-    analyze_report();
-}
+if($_REQUEST['health_reporting']) analyze_report();
 
 /**
  * Gathers temperature data from students
@@ -136,46 +134,57 @@ if($_REQUEST['health_reporting']){
  */
 function analyze_report(){
     session_start();
-    $child = [];
-    $child['fname'] = $_POST['first_name'];
-    $child['lname'] = $_POST['last_name'];
-    $child['id'] = $_POST['id'];
-    $child['temperature'] = $_POST['temperature'];
-    $symptoms = 0;
-    for($i = 1; $i <= 50; $i++){
-        if(isset($_POST['symptom-' . $i])){
-            $symptoms++;
+    $temperature_violation = false;
+    if(!isset($_POST['number_of_students'])) return;
+    $student_num = (int)$_POST['number_of_students'];
+    for($i = 1; $i <= $student_num; $i++){
+        $child = [];
+        $child['fname'] = $_POST['student-' . $i . '-first_name'];
+        $child['lname'] = $_POST['student-' . $i . '-last_name'];
+        $child['id'] = $_POST['student-' . $i . '-id'];
+        $child['temperature'] = $_POST['student-' . $i . '-temperature'];
+        $symptoms = 0;
+        for($j = 1; $j <= 50; $j++){
+            if(isset($_POST['student-' . $i . '-symptom-' . $j])){
+                $symptoms++;
+            }
+        }
+        $child['symptoms'] = $symptoms;
+        $_SESSION['child-' . $i] = $child;
+        global $wpdb;
+        $query = $wpdb->prepare("SELECT * FROM students where id='{$child['id']}' and first_name='{$child['fname']}' and last_name='{$child['lname']}';");
+        $results = $wpdb->get_results($query);
+        if(count($results) == 0){
+            echo '<div class="student-error"><div class="container"><div class="student-error__box"><p class="student-error__box__message">' . get_field("student_error_message", "option") . '</p><div class="student-error__box__close">+</div></div></div></div>';
+            return;
+        }
+        else{
+            if($child['temperature'] >= get_field('temperature', 'option') || $child['symptoms'] >= get_field('symptoms', 'option')['max_symptoms']){
+                $now = new DateTime('now', new DateTimeZone('America/Los_Angeles'));
+                $wpdb->update(
+                    'students',
+                    array(
+                        'checked'           =>  $now->format('Y-m-d'),
+                        'temperature'       =>  $child['temperature'],
+                        'temperature_taken' =>  $now->format('Y-m-d H:i:s'),
+                        'symptom_count'     =>  $child['symptoms'],
+                    ),
+                    array(
+                        'id'                =>  (int)$child['id'],
+                    )
+                );
+                $temperature_violation = true;
+            }
         }
     }
-    $child['symptoms'] = $symptoms;
-    $_SESSION['child'] = $child;
-    global $wpdb;
-    $query = "SELECT * FROM students where id='{$child['id']}' and first_name='{$child['fname']}' and last_name='{$child['lname']}';";
-    $results = $wpdb->get_results($query);
-    if(count($results) == 0){
-        echo '<div class="student-error"><div class="container"><div class="student-error__box"><p class="student-error__box__message">' . get_field("student_error_message", "option") . '</p><div class="student-error__box__close">+</div></div></div></div>';
+    $_SESSION['number_of_students'] = $student_num;
+    if($temperature_violation){
+        header('Location: /rejected');
     }
     else{
-        if($child['temperature'] >= get_field('temperature', 'option') || $child['symptoms'] >= get_field('symptoms', 'option')['max_symptoms']){
-            $now = new DateTime('now', new DateTimeZone('America/Los_Angeles'));
-            $wpdb->update(
-                'students',
-                array(
-                    'checked'           =>  $now->format('Y-m-d'),
-                    'temperature'       =>  $child['temperature'],
-                    'temperature_taken' =>  $now->format('Y-m-d H:i:s'),
-                    'symptom_count'     =>  $child['symptoms'],
-                ),
-                array(
-                    'id'                =>  (int)$child['id'],
-                )
-            );
-            header('Location: /rejected');
-            exit();
-        }
         header('Location: /submitted');
-        exit();
     }
+    exit();
 }
 
 /**
@@ -193,7 +202,11 @@ function submitted_url(){
     $qr_date = $_SESSION['valid']->format('M d, Y');
     $qr_day = $_SESSION['valid']->format('D');
     $site = get_site_url();
-    $qr_content = $site . '/temperature-check?date=' . $qr_date . '&day=' . $qr_day . '&fname=' . $_SESSION['child']['fname'] . '&lname=' . $_SESSION['child']['lname'] . '&temp=' . $_SESSION['child']['temperature'];
+    $qr_content = $site . '/temperature-check?ns=' . (int)$_SESSION['number_of_students'] . '&date=' . $qr_date . '&day=' . $qr_day;
+    for($i = 1; $i <= (int)$_SESSION['number_of_students']; $i++){
+        $qr_content .= '&fname-' . $i . '=' . $_SESSION['child-' . $i]['fname'] . '&lname-' . $i . '=' . $_SESSION['child-' . $i]['lname'] . '&temp-' . $i . '=' . $_SESSION['child-' . $i]['temperature'];
+    }
+    $qr_content .= '&v=' . hash('sha256', $_SESSION['valid']->format('Ymd'));
     return $qr_content;
 }
 
@@ -207,7 +220,7 @@ function submitted_url(){
  */
 function update_student($child){
     global $wpdb;
-    $query = "SELECT * FROM students where id='{$child['id']}';";
+    $query = $wpdb->prepare("SELECT * FROM students where id='{$child['id']}';");
     $results = $wpdb->get_results($query);
     if(count($results) == 0){
         echo 'error';
@@ -230,7 +243,7 @@ function update_student($child){
 }
 
 /**
- * Gets the correct animal for the day for verificaiton.
+ * Gets the correct animal for the day for verification.
  */
 function verify_animal(){
     $date = new DateTime("now", new DateTimeZone("America/Los_Angeles"));
@@ -244,4 +257,67 @@ function verify_animal(){
         }
     endwhile;
     return;
+}
+
+/**
+ * Gets animal data for the check image and redirects if link is invalid
+ */
+function check_validity(){
+    if(!isset($_GET['date']) || !isset($_GET['day']) || !isset($_GET['v'])){
+        header("Location: /");
+        return;
+    }
+    $date = new DateTime("now", new DateTimeZone('America/Los_Angeles'));
+    $valid = hash('sha256', $date->format('Ymd'));
+    if($_GET['v'] != $valid){
+        header("Location: /");
+        return;
+    }
+    return verify_animal();
+}
+
+/**
+ * Gets sick counts for the student body
+ */
+function admin_status(){
+    global $wpdb;
+    $data = [];
+    $today = (new DateTime('now', new DateTimeZone('America/Los_Angeles')))->format('Y-m-d');
+    $data['max_temp'] = (float)get_field('temperature', 'option');
+    $data['max_symp'] = (int)get_field('symptoms', 'option')['max_symptoms'];
+    $data['sick'] = (int)($wpdb->get_results($wpdb->prepare('SELECT count(*) total FROM students where (temperature >= ' . $data['max_temp'] . ' or symptom_count >= ' . $data['max_symp'] . ') and checked = "' . $today . '"')))[0]->total;
+    $data['healthy'] = (int)($wpdb->get_results($wpdb->prepare('SELECT count(*) total FROM students where (temperature < ' . $data['max_temp'] . ' and symptom_count < ' . $data['max_symp'] . ') and checked = "' . $today . '"')))[0]->total;
+    $data['total'] = (int)($wpdb->get_results($wpdb->prepare('SELECT count(*) total FROM students')))[0]->total;
+    $data['animal'] = verify_animal();
+    return $data;
+}
+
+/**
+ * Displays student admin table rows
+ */
+function display_students($status){
+    global $wpdb;
+    $results = $wpdb->get_results('SELECT * FROM students ORDER BY last_name, first_name;');
+    $today = (new DateTime('now', new DateTimeZone('America/Los_Angeles')))->format('Y-m-d');
+    foreach($results as $row){
+        $temp_taken = '';
+        if($row->temperature_taken){
+            $temp_taken = DateTime::createFromFormat('Y-m-d H:i:s', $row->temperature_taken);
+            $temp_taken = $temp_taken->format('h:i A');
+        }
+        if($today == $row->checked){
+            if($row->temperature < $status['max_temp'] && $row->symptom_count < $status['max_symp']){
+                $student_row = '<tr class="good-to-go">';
+            }
+            else{
+                $student_row = '<tr class="stay-home">';
+            }
+            $student_row .= '<td>' . $row->last_name . '</td><td>' . $row->first_name . '</td><td>' . $temp_taken . '</td><td>' . $row->temperature . '</td><td>' . $row->symptom_count . '</td>';
+        }
+        else{
+            $student_row = '<tr class="not-checked-in"><td>' . $row->last_name . '</td><td>' . $row->first_name . '</td><td>-</td><td>-</td><td>-</td>';
+        }
+        $student_row .= '</tr>';
+        echo $student_row;
+    }
 }

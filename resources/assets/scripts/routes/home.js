@@ -3,6 +3,20 @@ import Tesseract from 'tesseract.js';
 export default {
   init() {
     // JavaScript to be fired on the home page
+    $('.number-of-students__button').on('input', function(){
+      if($(this).val() === '' || $(this).val() < 1) return;
+      var number_of_students = $(this).val();
+      $('.student').each(function(ind){
+        if(ind < number_of_students) $(this).slideDown(500);
+        else $(this).slideUp(500);
+      });
+    });
+    $(window).keydown(function(event){
+      if(event.keyCode == 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
   },
   finalize() {
     // JavaScript to be fired on the home page, after the init JS
